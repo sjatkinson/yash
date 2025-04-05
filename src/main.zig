@@ -1,21 +1,48 @@
 //! By convention, main.zig is where your main function lives in the case that
 //! you are building an executable. If you are making a library, the convention
 //! is to delete this file and start with root.zig instead.
+const max_line_size = 1024;
+const default_prompt = "$ ";
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    try do_repl();
+}
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+fn display_prompt() !void {
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print(default_prompt, .{});
+}
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
+fn get_input_line() !?[]u8 {
+    const stdin = std.io.getStdIn().reader();
+    const alloc = std.heap.page_allocator;
+    const u_input = try stdin.readUntilDelimiterOrEofAlloc(alloc, '\n', max_line_size);
 
-    try bw.flush(); // Don't forget to flush!
+    return u_input;
+}
+
+fn should_quit(input: ?[]u8) bool {
+    if (input) |value| {
+        if (!std.mem.eql(u8, value, "exit")) {
+            return false;
+        }
+    }
+    return true;
+}
+
+fn do_repl() !void {
+    const stdout = std.io.getStdOut().writer();
+
+    while (true) {
+        try display_prompt();
+        const u_input = try get_input_line();
+        if (should_quit(u_input)) {
+            break;
+        }
+        if (u_input) |input| {
+            try stdout.print("{s}\n", .{input});
+        }
+    }
 }
 
 test "simple test" {
