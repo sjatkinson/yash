@@ -1,6 +1,6 @@
 # Primilinary short term roadmap
 
-* Add simple repl
+* Add simple repl - in progress
 * Run processes with no args
 * Run processes with simple args
 * Run processes with simple wildcards
