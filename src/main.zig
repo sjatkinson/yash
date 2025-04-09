@@ -8,6 +8,20 @@ pub fn main() !void {
     try do_repl();
 }
 
+fn spawn(name: []const u8) !void {
+    const argv = [_][]const u8{name};
+    const alloc = std.heap.page_allocator;
+    var child = std.process.Child.init(&argv, alloc);
+    try child.spawn();
+    const exit_code = child.wait() catch |e| {
+        std.debug.print("process failed {}\n", .{e});
+        return;
+    };
+    if (exit_code != .Exited) {
+        std.debug.print("exit code not zero\n", .{});
+    }
+}
+
 fn display_prompt() !void {
     const stdout = std.io.getStdOut().writer();
     try stdout.print(default_prompt, .{});
@@ -31,8 +45,6 @@ fn should_quit(input: ?[]u8) bool {
 }
 
 fn do_repl() !void {
-    const stdout = std.io.getStdOut().writer();
-
     while (true) {
         try display_prompt();
         const u_input = try get_input_line();
@@ -40,7 +52,8 @@ fn do_repl() !void {
             break;
         }
         if (u_input) |input| {
-            try stdout.print("{s}\n", .{input});
+            // TODO: split the line in args
+            try spawn(input);
         }
     }
 }
