@@ -1,4 +1,6 @@
 # Current Todo's
-* Return cmd from repl
-* Spawn the command
+* parse command into simple ast
+* add some tests
+* break out into multiple files
+* add some built in's - echo, cd, pwd
 
