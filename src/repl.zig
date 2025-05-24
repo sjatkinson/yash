@@ -19,6 +19,8 @@ pub fn run() !void {
 }
 
 
+// TODO: need a scanner and a parser
+// first tokens supported likely  to be ';', "||", and "&&"
 fn get_input_line() !?[]u8 {
     const stdin = std.io.getStdIn().reader();
     const alloc = std.heap.page_allocator;

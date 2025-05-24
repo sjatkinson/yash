@@ -1,8 +1,8 @@
 
-const repl = @import("repl.zig");
+const yash = @import("yash.zig");
 
 
 pub fn main() !void {
-    try repl.run();
+    try yash.repl();
 }
 
