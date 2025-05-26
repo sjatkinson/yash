@@ -1,8 +1,7 @@
 # Primilinary short term roadmap
 
-* Add simple repl - in progress
-* Run processes with no args
-* Run processes with simple args
+* Run processes with simple args - in progress
+* add simple conditionals like && and ||
 * Run processes with simple wildcards
 * Incorporate readline
 * Incorporate history

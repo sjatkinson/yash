@@ -1,6 +1,6 @@
 # Current Todo's
-* parse command into simple ast
-** add a scanner
-* add some tests
-* add some built in's - echo, cd, pwd
+* fix parssing so "ls build.zig" works
+* flesh out errors
+* fix exit command
+* add some simple built in's - echo, pwd
 
