@@ -2,7 +2,8 @@ const std = @import("std");
 const prompt = @import("prompt.zig");
 const exec = @import("exec.zig");
 const yash = @import("ast.zig");
-const parser = @import("parser.zig");
+const Parser = @import("parser.zig").Parser;
+const Lexer = @import("lexer.zig").Lexer;
 
 const max_line_size = 1024;
 
@@ -13,9 +14,13 @@ pub fn run() !void {
         const line = try get_input_line(alloc);
         defer alloc.free(line);
 
-        //const alloc = std.heap.page_allocator;
-        //const ast = parser.parse(alloc, u_input);
-        _ = try parser.parse(line);
+        var lexer = Lexer.init(line);
+        const MyParser = Parser(@TypeOf(lexer));
+        var parser = try MyParser.init(alloc, &lexer);
+        var ast = try parser.parse();
+        // TODO: execute the ast
+        defer ast.deinit(alloc);
+
 
         // TODO: now parse the line to break it into a series of commands
         // what's the best way to handle &&, ||, subshells
@@ -26,7 +31,9 @@ pub fn run() !void {
         if (should_quit(line)) {
             break;
         }
-        try exec.spawn(line);
+        const exit_code: u8 = try ast.execute();
+        _ = exit_code;
+        //try exec.spawn(line);
     }
 }
 
