@@ -8,4 +8,3 @@ pub const Token = struct {
     kind: TokenType,
     lexeme: []const u8,
 };
-

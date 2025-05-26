@@ -1,14 +1,14 @@
 const std = @import("std");
 
-pub fn spawn(name: []const u8, args: [] const [] const u8 ) !u8 {
+pub fn spawn(name: []const u8, args: []const []const u8) !u8 {
     // TODO: pass in the allocator
     const alloc = std.heap.page_allocator;
     const args_count = 1 + args.len;
-    var argv = try alloc.alloc([] const u8, args_count);
+    var argv = try alloc.alloc([]const u8, args_count);
     defer alloc.free(argv);
 
     argv[0] = name;
-    for (args, 1..)  |arg, i| {
+    for (args, 1..) |arg, i| {
         argv[i] = arg;
     }
     var child = std.process.Child.init(argv, alloc);
@@ -23,7 +23,3 @@ pub fn spawn(name: []const u8, args: [] const [] const u8 ) !u8 {
     // TOD: get the actual code
     return 0;
 }
-
-
-
-

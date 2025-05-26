@@ -21,7 +21,6 @@ pub fn run() !void {
         // TODO: execute the ast
         defer ast.deinit(alloc);
 
-
         // TODO: now parse the line to break it into a series of commands
         // what's the best way to handle &&, ||, subshells
         // should get back a tree to execute
@@ -37,10 +36,9 @@ pub fn run() !void {
     }
 }
 
-
 // TODO: need a scanner and a parser
 // first tokens supported likely  to be ';', "||", and "&&"
-fn get_input_line(alloc: std.mem.Allocator) ![] u8 {
+fn get_input_line(alloc: std.mem.Allocator) ![]u8 {
     const stdin = std.io.getStdIn().reader();
     const line = try stdin.readUntilDelimiterOrEofAlloc(alloc, '\n', max_line_size);
     if (line != null)
@@ -50,9 +48,8 @@ fn get_input_line(alloc: std.mem.Allocator) ![] u8 {
 }
 
 fn should_quit(input: []u8) bool {
-        if (!std.mem.eql(u8, input, "exit")) {
-            return false;
-        }
+    if (!std.mem.eql(u8, input, "exit")) {
+        return false;
+    }
     return true;
 }
-

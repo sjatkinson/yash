@@ -5,22 +5,20 @@ const token = @import("token.zig");
 const TokenType = token.TokenType;
 const Token = token.Token;
 
-pub const LexerError = error {
+pub const LexerError = error{
     invalid,
     invalid_char,
 };
 
 fn isValidIdentifierChar(c: u8) bool {
-        return switch(c) {
-            'a'...'z',
-            'A'...'Z',
-            '.','/','_' => true,
+    return switch (c) {
+        'a'...'z', 'A'...'Z', '.', '/', '_' => true,
         else => false,
-        };
+    };
 }
 
 pub const Lexer = struct {
-    source: [] const u8,
+    source: []const u8,
     pos: usize,
 
     pub fn init(src: []const u8) Lexer {
@@ -50,7 +48,7 @@ pub const Lexer = struct {
     fn lexIdentifier(self: *Lexer) Token {
         // TODO: handle invalid chars
         const start = self.pos;
-        while(!self.isAtEnd() and isValidIdentifierChar(self.peek())) {
+        while (!self.isAtEnd() and isValidIdentifierChar(self.peek())) {
             self.pos += 1;
         }
         return Token{ .kind = TokenType.identifier, .lexeme = self.source[start..self.pos] };
@@ -95,7 +93,7 @@ test "single indentifier" {
 test "single semicolon" {
     var lexer = Lexer.init(";");
     var result = try lexer.nextToken();
-    try std.testing.expectEqualDeep(Token{.kind = TokenType.semicolon, .lexeme = ";" }, result);
+    try std.testing.expectEqualDeep(Token{ .kind = TokenType.semicolon, .lexeme = ";" }, result);
     result = try lexer.nextToken();
     try std.testing.expectEqual(TokenType.eof, result.kind);
 }
@@ -103,7 +101,7 @@ test "single semicolon" {
 test "ids with semicolon" {
     var lexer = Lexer.init("ls foo ; blort");
     var result = try lexer.nextToken();
-     try std.testing.expectEqualDeep(Token{ .kind = TokenType.identifier, .lexeme = "ls" }, result);
+    try std.testing.expectEqualDeep(Token{ .kind = TokenType.identifier, .lexeme = "ls" }, result);
 
     result = try lexer.nextToken();
     try std.testing.expectEqualDeep(Token{ .kind = TokenType.identifier, .lexeme = "foo" }, result);
@@ -117,5 +115,3 @@ test "ids with semicolon" {
     result = try lexer.nextToken();
     try std.testing.expectEqual(TokenType.eof, result.kind);
 }
-
-

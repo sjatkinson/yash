@@ -7,7 +7,6 @@ const Token = @import("token.zig").Token;
 
 const Statement = Ast.Statement;
 
-
 pub fn Parser(comptime L: type) type {
     return struct {
         lexer: *L,
@@ -15,10 +14,7 @@ pub fn Parser(comptime L: type) type {
         allocator: std.mem.Allocator,
 
         pub fn init(allocator: std.mem.Allocator, lexer: *L) !@This() {
-            var self = @This() {
-                .lexer = lexer,
-                .allocator = allocator
-            };
+            var self = @This(){ .lexer = lexer, .allocator = allocator };
             try self.advance();
             return self;
         }
@@ -33,13 +29,12 @@ pub fn Parser(comptime L: type) type {
                 if (self.current.kind == .semicolon) {
                     try self.advance();
                     continue;
-                }
-                else if (self.current.kind == .identifier) {
+                } else if (self.current.kind == .identifier) {
                     const statement = try self.parseStatement();
                     try statements.append(statement);
                 }
             }
-            return Ast{ .statements = try  statements.toOwnedSlice() };
+            return Ast{ .statements = try statements.toOwnedSlice() };
         }
 
         fn parseStatement(self: *@This()) !Statement {
@@ -53,7 +48,7 @@ pub fn Parser(comptime L: type) type {
             var args = std.ArrayList([]const u8).init(self.allocator);
             while (self.current.kind == .identifier) {
                 try args.append(self.current.lexeme);
-                try  self.advance();
+                try self.advance();
             }
 
             return Statement{
@@ -66,29 +61,27 @@ pub fn Parser(comptime L: type) type {
     };
 }
 
-        const MockLexer = struct {
-            tokens: []const Token,
-            index: usize = 0,
+const MockLexer = struct {
+    tokens: []const Token,
+    index: usize = 0,
 
-            pub fn nextToken(self: *MockLexer) !Token {
-                if (self.index >= self.tokens.len)
-                    return Token{ .kind = .eof, .lexeme = "" };
-                defer self.index += 1;
-                return self.tokens[self.index];
-            }
-        };
-
-
+    pub fn nextToken(self: *MockLexer) !Token {
+        if (self.index >= self.tokens.len)
+            return Token{ .kind = .eof, .lexeme = "" };
+        defer self.index += 1;
+        return self.tokens[self.index];
+    }
+};
 
 test "simple parse" {
     const alloc = std.testing.allocator;
 
     var tokens = [_]Token{
-        .{ .kind = .identifier, .lexeme = "ls"},
-        .{ .kind = .identifier, .lexeme = "-la"},
-        .{ .kind = .identifier, .lexeme = "foo"},
-        .{ .kind = .semicolon, .lexeme = ";"},
-        .{ .kind = .identifier, .lexeme = "echo"},
+        .{ .kind = .identifier, .lexeme = "ls" },
+        .{ .kind = .identifier, .lexeme = "-la" },
+        .{ .kind = .identifier, .lexeme = "foo" },
+        .{ .kind = .semicolon, .lexeme = ";" },
+        .{ .kind = .identifier, .lexeme = "echo" },
     };
 
     var mock = MockLexer{ .tokens = &tokens };
@@ -99,5 +92,3 @@ test "simple parse" {
     // TODO: validate the ast
     defer ast.deinit(alloc);
 }
-
-

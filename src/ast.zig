@@ -3,7 +3,7 @@ const yash = @import("yash.zig");
 const exec = @import("exec.zig");
 
 pub const Ast = struct {
-    statements: [] Statement,
+    statements: []Statement,
 
     pub const Statement = union(enum) {
         Command: CommandExpr,
@@ -13,15 +13,14 @@ pub const Ast = struct {
                 .Command => |*cmd| cmd.deinit(alloc),
             }
         }
-
     };
 
     pub const CommandExpr = struct {
         name: []const u8,
-        args: [] const [] const u8,
+        args: []const []const u8,
 
         pub fn deinit(self: *CommandExpr, alloc: std.mem.Allocator) void {
-                alloc.free(self.args);
+            alloc.free(self.args);
         }
     };
 
@@ -39,17 +38,16 @@ pub const Ast = struct {
         }
         return last_exit_code;
     }
-
 };
- fn executeStatement(statement: *const Ast.Statement) !u8 {
-            return switch(statement.*) {
-                .Command => |cmd| try executeCommand(cmd),
-            };
+fn executeStatement(statement: *const Ast.Statement) !u8 {
+    return switch (statement.*) {
+        .Command => |cmd| try executeCommand(cmd),
+    };
 }
 
- fn executeCommand(cmd: Ast.CommandExpr) !u8 {
-     if (cmd.name.len == 0)
-         return yash.ShellError.ParseError;  // TODO: fix this
+fn executeCommand(cmd: Ast.CommandExpr) !u8 {
+    if (cmd.name.len == 0)
+        return yash.ShellError.ParseError; // TODO: fix this
 
-     return try exec.spawn(cmd.name, cmd.args);
+    return try exec.spawn(cmd.name, cmd.args);
 }
