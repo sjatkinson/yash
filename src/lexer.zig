@@ -10,6 +10,15 @@ pub const LexerError = error {
     invalid_char,
 };
 
+fn isValidIdentifierChar(c: u8) bool {
+        return switch(c) {
+            'a'...'z',
+            'A'...'Z',
+            '.','/','_' => true,
+        else => false,
+        };
+}
+
 pub const Lexer = struct {
     source: [] const u8,
     pos: usize,
@@ -32,17 +41,16 @@ pub const Lexer = struct {
         if (c == ';') {
             return self.lexSemicolon();
         }
-        if (std.ascii.isAlphabetic(c)) {
+        if (isValidIdentifierChar(c)) {
             return self.lexIdentifier();
         }
-
         return LexerError.invalid;
     }
 
     fn lexIdentifier(self: *Lexer) Token {
         // TODO: handle invalid chars
         const start = self.pos;
-        while(!self.isAtEnd() and (std.ascii.isAlphanumeric(self.peek()) or self.peek() == '_')) {
+        while(!self.isAtEnd() and isValidIdentifierChar(self.peek())) {
             self.pos += 1;
         }
         return Token{ .kind = TokenType.identifier, .lexeme = self.source[start..self.pos] };
