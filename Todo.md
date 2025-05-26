@@ -1,6 +1,6 @@
 # Current Todo's
-* fix parssing so "ls build.zig" works
+* handle invalid chars gracefully
 * flesh out errors
 * fix exit command
-* add some simple built in's - echo, pwd
+* add some simple built-in's - echo, pwd
 
