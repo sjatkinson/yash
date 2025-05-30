@@ -27,16 +27,12 @@ pub fn run() !void {
         // TODO: how should we represent the commands
         // they can be built-in, alias, exec, shell command
         // have a struct for each type of command, the a union
-        if (should_quit(line)) {
-            break;
-        }
         const exit_code: u8 = try ast.execute();
+        // TODO: keep track of last error
         _ = exit_code;
-        //try exec.spawn(line);
     }
 }
 
-// TODO: need a scanner and a parser
 // first tokens supported likely  to be ';', "||", and "&&"
 fn get_input_line(alloc: std.mem.Allocator) ![]u8 {
     const stdin = std.io.getStdIn().reader();
@@ -45,11 +41,4 @@ fn get_input_line(alloc: std.mem.Allocator) ![]u8 {
         return line.?;
 
     return "";
-}
-
-fn should_quit(input: []u8) bool {
-    if (!std.mem.eql(u8, input, "exit")) {
-        return false;
-    }
-    return true;
 }

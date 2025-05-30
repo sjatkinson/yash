@@ -12,7 +12,7 @@ pub const LexerError = error{
 
 fn isValidIdentifierChar(c: u8) bool {
     return switch (c) {
-        'a'...'z', 'A'...'Z', '.', '/', '_' => true,
+        '0'...'9', 'a'...'z', 'A'...'Z', '.', '/', '_' => true,
         else => false,
     };
 }

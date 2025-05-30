@@ -1,6 +1,7 @@
 const std = @import("std");
 const yash = @import("yash.zig");
 const exec = @import("exec.zig");
+const builtins = @import("builtins.zig");
 
 pub const Ast = struct {
     statements: []Statement,
@@ -48,6 +49,13 @@ fn executeStatement(statement: *const Ast.Statement) !u8 {
 fn executeCommand(cmd: Ast.CommandExpr) !u8 {
     if (cmd.name.len == 0)
         return yash.ShellError.ParseError; // TODO: fix this
+
+    const maybeBuiltin = builtins.findBuiltin(cmd.name);
+    if (maybeBuiltin) |func| {
+        func(cmd.args);
+        return 0;
+    }
+    // TODO: is it an alias, or a built-in
 
     return try exec.spawn(cmd.name, cmd.args);
 }
