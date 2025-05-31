@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const BuiltinFn = *const fn ([]const []const u8) void;
+const BuiltinFn = *const fn (allocator: std.mem.Allocator, []const []const u8) void;
 
 const BuiltinCmds = struct {
     name: []const u8,
@@ -28,9 +28,7 @@ pub fn findBuiltin(cmd: []const u8) ?BuiltinFn {
     return null;
 }
 
-pub fn findExecutableInPath(exe: []const u8) ?[]u8 {
-    // TODO: pass in the allocator
-    const allocator = std.heap.page_allocator;
+pub fn findExecutableInPath(allocator: std.mem.Allocator, exe: []const u8) ?[]u8 {
     const path_env = std.process.getEnvVarOwned(allocator, "PATH") catch {
         return null;
     };
@@ -53,7 +51,7 @@ pub fn findExecutableInPath(exe: []const u8) ?[]u8 {
     return null;
 }
 
-fn doExit(args: []const []const u8) void {
+fn doExit(_: std.mem.Allocator, args: []const []const u8) void {
     if (args.len > 1) {
         std.debug.print("exit: too many arguments\n", .{});
         return;
@@ -68,7 +66,7 @@ fn doExit(args: []const []const u8) void {
     std.process.exit(code);
 }
 
-fn doEcho(args: []const []const u8) void {
+fn doEcho(_: std.mem.Allocator, args: []const []const u8) void {
     const stdout = std.io.getStdOut().writer();
     for (args) |arg| {
         stdout.print("{s} ", .{arg}) catch {};
@@ -76,14 +74,14 @@ fn doEcho(args: []const []const u8) void {
     stdout.print("\n", .{}) catch {};
 }
 
-fn doType(args: []const []const u8) void {
+fn doType(allocator: std.mem.Allocator, args: []const []const u8) void {
     const stdout = std.io.getStdOut().writer();
     for (args) |arg| {
         const func = findBuiltin(arg);
         if (func) |_| {
             stdout.print("{s} is a shell builtin", .{arg}) catch {};
         } else {
-            if (findExecutableInPath(arg)) |p| {
+            if (findExecutableInPath(allocator, arg)) |p| {
                 stdout.print("{s} is {s}", .{ arg, p }) catch {};
             } else stdout.print("{s} not found", .{arg}) catch {};
         }

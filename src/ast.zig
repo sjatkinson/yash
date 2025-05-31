@@ -32,30 +32,30 @@ pub const Ast = struct {
         alloc.free(self.statements);
     }
 
-    pub fn execute(self: *Ast) !u8 {
+    pub fn execute(self: *Ast, allocator: std.mem.Allocator) !u8 {
         var last_exit_code: u8 = 0;
         for (self.statements) |stmt| {
-            last_exit_code = try executeStatement(&stmt);
+            last_exit_code = try executeStatement(allocator, &stmt);
         }
         return last_exit_code;
     }
 };
-fn executeStatement(statement: *const Ast.Statement) !u8 {
+fn executeStatement(allocator: std.mem.Allocator, statement: *const Ast.Statement) !u8 {
     return switch (statement.*) {
-        .Command => |cmd| try executeCommand(cmd),
+        .Command => |cmd| try executeCommand(allocator, cmd),
     };
 }
 
-fn executeCommand(cmd: Ast.CommandExpr) !u8 {
+fn executeCommand(allocator: std.mem.Allocator, cmd: Ast.CommandExpr) !u8 {
     if (cmd.name.len == 0)
         return yash.ShellError.ParseError; // TODO: fix this
 
     const maybeBuiltin = builtins.findBuiltin(cmd.name);
     if (maybeBuiltin) |func| {
-        func(cmd.args);
+        func(allocator, cmd.args);
         return 0;
     }
     // TODO: is it an alias, or a built-in
 
-    return try exec.spawn(cmd.name, cmd.args);
+    return try exec.spawn(allocator, cmd.name, cmd.args);
 }
