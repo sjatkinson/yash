@@ -10,8 +10,14 @@ const BuiltinCmds = struct {
 const builtin_cmds = [_]BuiltinCmds{
     .{ .name = "exit", .func = &doExit },
     .{ .name = "echo", .func = &doEcho },
+    .{ .name = "type", .func = &doType },
 };
 
+fn isExecutable(path: []const u8) bool {
+    _ = path;
+    // TODO:implement this
+    return true;
+}
 
 pub fn findBuiltin(cmd: []const u8) ?BuiltinFn {
     for (builtin_cmds) |builtin| {
@@ -21,6 +27,32 @@ pub fn findBuiltin(cmd: []const u8) ?BuiltinFn {
     }
     return null;
 }
+
+pub fn findExecutableInPath(exe: []const u8) ?[]u8 {
+    // TODO: pass in the allocator
+    const allocator = std.heap.page_allocator;
+    const path_env = std.process.getEnvVarOwned(allocator, "PATH") catch {
+        return null;
+    };
+    defer allocator.free(path_env);
+
+    var it = std.mem.tokenizeScalar(u8, path_env, ':');
+    while (it.next()) |dir| {
+        const parts = [_][]const u8{ dir, exe };
+        const full_path = std.fs.path.join(allocator, &parts) catch {
+            continue;
+        };
+        if (std.fs.cwd().access(full_path, .{})) {
+            return allocator.dupe(u8, full_path) catch {
+                // TOdO: need to return an error here?
+                std.debug.print("Memory allocation failed", .{});
+                continue;
+            };
+        } else |_| {}
+    }
+    return null;
+}
+
 fn doExit(args: []const []const u8) void {
     if (args.len > 1) {
         std.debug.print("exit: too many arguments\n", .{});
@@ -40,6 +72,21 @@ fn doEcho(args: []const []const u8) void {
     const stdout = std.io.getStdOut().writer();
     for (args) |arg| {
         stdout.print("{s} ", .{arg}) catch {};
+    }
+    stdout.print("\n", .{}) catch {};
+}
+
+fn doType(args: []const []const u8) void {
+    const stdout = std.io.getStdOut().writer();
+    for (args) |arg| {
+        const func = findBuiltin(arg);
+        if (func) |_| {
+            stdout.print("{s} is a shell builtin", .{arg}) catch {};
+        } else {
+            if (findExecutableInPath(arg)) |p| {
+                stdout.print("{s} is {s}", .{ arg, p }) catch {};
+            } else stdout.print("{s} not found", .{arg}) catch {};
+        }
     }
     stdout.print("\n", .{}) catch {};
 }
