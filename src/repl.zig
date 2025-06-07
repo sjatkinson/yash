@@ -12,7 +12,7 @@ pub fn run(allocator: std.mem.Allocator) !void {
     var executor = Executor.init(allocator);
     
     while (true) {
-        try prompt.display();
+        prompt.display();
         const line = try get_input_line(allocator);
         defer allocator.free(line);
 

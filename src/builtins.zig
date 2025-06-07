@@ -1,4 +1,5 @@
 const std = @import("std");
+const yash = @import("yash.zig");
 
 const BuiltinFn = *const fn (allocator: std.mem.Allocator, []const []const u8) void;
 
@@ -42,8 +43,8 @@ pub fn findExecutableInPath(allocator: std.mem.Allocator, exe: []const u8) ?[]u8
         };
         if (std.fs.cwd().access(full_path, .{})) {
             return allocator.dupe(u8, full_path) catch {
-                // TOdO: need to return an error here?
-                std.debug.print("Memory allocation failed", .{});
+                // TODO: need to return an error here?
+                std.debug.print("yash: memory allocation failed\n", .{});
                 continue;
             };
         } else |_| {}
@@ -67,24 +68,24 @@ fn doExit(_: std.mem.Allocator, args: []const []const u8) void {
 }
 
 fn doEcho(_: std.mem.Allocator, args: []const []const u8) void {
-    const stdout = std.io.getStdOut().writer();
     for (args) |arg| {
-        stdout.print("{s} ", .{arg}) catch {};
+        yash.print("{s} ", .{arg});
     }
-    stdout.print("\n", .{}) catch {};
+    yash.print("\n", .{});
 }
 
 fn doType(allocator: std.mem.Allocator, args: []const []const u8) void {
-    const stdout = std.io.getStdOut().writer();
     for (args) |arg| {
         const func = findBuiltin(arg);
         if (func) |_| {
-            stdout.print("{s} is a shell builtin", .{arg}) catch {};
+            yash.print("{s} is a shell builtin", .{arg});
         } else {
             if (findExecutableInPath(allocator, arg)) |p| {
-                stdout.print("{s} is {s}", .{ arg, p }) catch {};
-            } else stdout.print("{s} not found", .{arg}) catch {};
+                yash.print("{s} is {s}", .{ arg, p });
+            } else {
+                yash.print("{s} not found", .{arg});
+            }
         }
     }
-    stdout.print("\n", .{}) catch {};
+    yash.print("\n", .{});
 }
