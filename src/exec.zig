@@ -1,7 +1,7 @@
 const std = @import("std");
 const yash = @import("yash.zig");
 
-pub fn spawn(allocator: std.mem.Allocator, name: []const u8, args: []const []const u8) !u8 {
+fn spawn(allocator: std.mem.Allocator, name: []const u8, args: []const []const u8) !u8 {
     const args_count = 1 + args.len;
     var argv = try allocator.alloc([]const u8, args_count);
     defer allocator.free(argv);
@@ -21,4 +21,13 @@ pub fn spawn(allocator: std.mem.Allocator, name: []const u8, args: []const []con
     }
     // TOD: get the actual code
     return 0;
+}
+
+pub fn execute(allocator: std.mem.Allocator, name: []const u8, args: []const []const u8) !u8 {
+    // TODO: check for relative or fullpath
+    if (yash.findExecutableInPath(allocator, name)) |fullpath| {
+        return try spawn(allocator, fullpath, args);
+    }
+    std.debug.print("{s} not found.\n", .{name});
+    return 255;
 }

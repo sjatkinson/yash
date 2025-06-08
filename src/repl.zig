@@ -10,12 +10,16 @@ const max_line_size = 1024;
 
 pub fn run(allocator: std.mem.Allocator) !void {
     var executor = Executor.init(allocator);
-    
-    while (true) {
-        prompt.display();
-        const line = try get_input_line(allocator);
-        defer allocator.free(line);
 
+    var buf: [max_line_size]u8 = undefined;
+    // We should pull this out somewhere so we
+    // can reuse it when data is coming form stdin
+    // The only difference in that case is we won't display
+    // a prompt.
+    prompt.display();
+    const reader = std.io.getStdIn().reader();
+    while (try reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+        std.debug.print("got line - {s}\n", .{line});
         var lexer = Lexer.init(line);
         const MyParser = Parser(@TypeOf(lexer));
         var parser = try MyParser.init(allocator, &lexer);
@@ -25,15 +29,6 @@ pub fn run(allocator: std.mem.Allocator) !void {
         const exit_code: u8 = try executor.execute(&ast);
         // TODO: keep track of last error
         _ = exit_code;
+        prompt.display();
     }
-}
-
-// first tokens supported likely  to be ';', "||", and "&&"
-fn get_input_line(allocator: std.mem.Allocator) ![]u8 {
-    const stdin = std.io.getStdIn().reader();
-    const line = try stdin.readUntilDelimiterOrEofAlloc(allocator, '\n', max_line_size);
-    if (line != null)
-        return line.?;
-
-    return "";
 }

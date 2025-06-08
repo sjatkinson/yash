@@ -38,6 +38,6 @@ pub const Executor = struct {
         }
         // TODO: is it an alias, or a built-in
 
-        return try exec.spawn(self.allocator, cmd.name, cmd.args);
+        return try exec.execute(self.allocator, cmd.name, cmd.args);
     }
-}; 
+};
