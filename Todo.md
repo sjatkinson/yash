@@ -1,7 +1,8 @@
 # Current Todo's
-* handle invalid chars gracefully
-* handle fatal errors like out of memory grafully
 * flesh out errors
+* check if stdin is TTY, if not don;t display a prompt
+* handle fatal errors like out of memory grafully
 * add some simple built-in's - pwd
-* add our own search for execs to run
+* add && and ||
+* handle invalid chars gracefully
 
