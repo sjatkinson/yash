@@ -29,5 +29,5 @@ pub fn execute(allocator: std.mem.Allocator, name: []const u8, args: []const []c
         return try spawn(allocator, fullpath, args);
     }
     std.debug.print("{s} not found.\n", .{name});
-    return 255;
+    return 127;
 }
