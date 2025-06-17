@@ -19,7 +19,6 @@ pub fn run(allocator: std.mem.Allocator) !void {
     prompt.display();
     const reader = std.io.getStdIn().reader();
     while (try reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-        std.debug.print("got line - {s}\n", .{line});
         var lexer = Lexer.init(line);
         const MyParser = Parser(@TypeOf(lexer));
         var parser = try MyParser.init(allocator, &lexer);
