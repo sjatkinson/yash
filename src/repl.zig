@@ -1,7 +1,7 @@
 const std = @import("std");
 const prompt = @import("prompt.zig");
 const exec = @import("exec.zig");
-const yash = @import("ast.zig");
+const Ast = @import("ast.zig").Ast;
 const Parser = @import("parser.zig").Parser;
 const Lexer = @import("lexer.zig").Lexer;
 const Executor = @import("executor.zig").Executor;
@@ -19,10 +19,12 @@ pub fn run(allocator: std.mem.Allocator) !void {
     prompt.display();
     const reader = std.io.getStdIn().reader();
     while (try reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-        var lexer = Lexer.init(line);
-        const MyParser = Parser(@TypeOf(lexer));
-        var parser = try MyParser.init(allocator, &lexer);
-        var ast = try parser.parse();
+        var ast = parseLine(allocator, line ) catch {
+            // TODO: handle specific errors
+            std.debug.print("Error parsing input: \n", .{});
+            prompt.display();
+            continue;
+        };
         defer ast.deinit(allocator);
 
         const exit_code: u8 = try executor.execute(&ast);
@@ -30,4 +32,11 @@ pub fn run(allocator: std.mem.Allocator) !void {
         _ = exit_code;
         prompt.display();
     }
+}
+
+fn parseLine(allocator: std.mem.Allocator, line: [] const u8) !Ast {
+    var lexer = Lexer.init(line);
+    const MyParser = Parser(@TypeOf(lexer));
+    var parser = try MyParser.init(allocator, &lexer);
+    return try parser.parse();
 }
