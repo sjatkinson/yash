@@ -12,25 +12,30 @@ pub fn run(allocator: std.mem.Allocator) !void {
     var executor = Executor.init(allocator);
 
     var buf: [max_line_size]u8 = undefined;
-    // We should pull this out somewhere so we
-    // can reuse it when data is coming form stdin
-    // The only difference in that case is we won't display
-    // a prompt.
-    prompt.display();
-    const reader = std.io.getStdIn().reader();
-    while (try reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-        var ast = parseLine(allocator, line ) catch {
-            // TODO: handle specific errors
-            std.debug.print("Error parsing input: \n", .{});
-            prompt.display();
+    while (true) {
+        const result = getLine(&buf) catch |err| {
+            std.debug.print("Error getting input: {}\n", .{err});
             continue;
         };
-        defer ast.deinit(allocator);
+        if (result) |line| {
+            var ast = parseLine(allocator, line ) catch |e| {
+                // TODO: handle specific errors
+                std.debug.print("Error parsing input: {}\n", .{e});
+                continue;
+            };
+            defer ast.deinit(allocator);
 
-        const exit_code: u8 = try executor.execute(&ast);
-        // TODO: keep track of last error
-        _ = exit_code;
-        prompt.display();
+            const exit_code: u8 = executor.execute(&ast) catch |err| {
+                // TODO: handle specific errors
+                std.debug.print("Error parsing input: {}\n", .{err});
+                continue;
+            };
+            // TODO: keep track of last error
+            _ = exit_code;
+        }
+        else {
+            break;
+        }
     }
 }
 
@@ -39,4 +44,10 @@ fn parseLine(allocator: std.mem.Allocator, line: [] const u8) !Ast {
     const MyParser = Parser(@TypeOf(lexer));
     var parser = try MyParser.init(allocator, &lexer);
     return try parser.parse();
+}
+
+fn getLine(buffer: []u8) !?[]u8 {
+    prompt.display();
+    const reader = std.io.getStdIn().reader();
+    return try reader.readUntilDelimiterOrEof(buffer, '\n');
 }
