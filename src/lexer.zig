@@ -10,12 +10,6 @@ pub const LexerError = error{
     invalid_char,
 };
 
-fn isValidIdentifierChar(c: u8) bool {
-    return switch (c) {
-        '0'...'9', 'a'...'z', 'A'...'Z', '.', '/', '_' => true,
-        else => false,
-    };
-}
 
 pub const Lexer = struct {
     source: []const u8,
@@ -36,13 +30,11 @@ pub const Lexer = struct {
         }
         const c = self.peek();
 
-        if (c == ';') {
-            return self.lexSemicolon();
-        }
-        if (isValidIdentifierChar(c)) {
-            return self.lexIdentifier();
-        }
-        return LexerError.invalid;
+        return switch (c) {
+            ';' => self.lexSemicolon(),
+            '0'...'9', 'a'...'z', 'A'...'Z', '.', '/', '_' => self.lexIdentifier(),
+            else => LexerError.invalid,
+        };
     }
 
     fn lexIdentifier(self: *Lexer) Token {
