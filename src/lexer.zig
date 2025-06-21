@@ -10,7 +10,6 @@ pub const LexerError = error{
     invalid_char,
 };
 
-
 pub const Lexer = struct {
     source: []const u8,
     pos: usize,
@@ -32,6 +31,7 @@ pub const Lexer = struct {
 
         return switch (c) {
             ';' => self.lexSemicolon(),
+            // TODO: how to handle the duplication with isValidIndentfier
             '0'...'9', 'a'...'z', 'A'...'Z', '.', '/', '_' => self.lexIdentifier(),
             else => LexerError.invalid,
         };
@@ -40,7 +40,7 @@ pub const Lexer = struct {
     fn lexIdentifier(self: *Lexer) Token {
         // TODO: handle invalid chars
         const start = self.pos;
-        while (!self.isAtEnd() and isValidIdentifierChar(self.peek())) {
+        while (!self.isAtEnd() and !std.ascii.isWhitespace(self.peek())) {
             self.pos += 1;
         }
         return Token{ .kind = TokenType.identifier, .lexeme = self.source[start..self.pos] };
