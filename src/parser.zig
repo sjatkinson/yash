@@ -2,15 +2,18 @@ const std = @import("std");
 const yash = @import("yash.zig");
 const Ast = @import("ast.zig").Ast;
 const Lexer = @import("lexer.zig").Lexer;
-const TokenType = @import("token.zig").Token.TokenType;
+const TokenType = @import("token.zig").TokenType;
 const Token = @import("token.zig").Token;
 
 const Statement = Ast.Statement;
+const Command = Ast.Command;
+const SimpleCommand = Ast.SimpleCommand;
 
 pub fn Parser(comptime L: type) type {
     return struct {
         lexer: *L,
         current: Token = undefined,
+        peeked_token: ?Token = null,
         allocator: std.mem.Allocator,
 
         pub fn init(allocator: std.mem.Allocator, lexer: *L) !@This() {
@@ -19,26 +22,33 @@ pub fn Parser(comptime L: type) type {
             return self;
         }
 
-        fn advance(self: *@This()) !void {
-            self.current = try self.lexer.nextToken();
-        }
-
         pub fn parse(self: *@This()) !Ast {
             var statements = std.ArrayList(Statement).init(self.allocator);
             while (self.current.kind != .eof) {
-                if (self.current.kind == .semicolon) {
+                const statement = try self.parseStatement();
+                try statements.append(statement);
+                const tok = try self.peek();
+                if (tok.kind == .semicolon) {
                     try self.advance();
-                    continue;
-                } else if (self.current.kind == .identifier) {
-                    const statement = try self.parseStatement();
-                    try statements.append(statement);
                 }
             }
             return Ast{ .statements = try statements.toOwnedSlice() };
         }
 
         fn parseStatement(self: *@This()) !Statement {
-            if (self.current.kind != .identifier) {
+            return Statement{ .Command = try self.parseCommand() };
+        }
+
+        fn parseCommand(self: *@This()) !Command {
+            return switch (self.current.kind) {
+                .identifier => Command{ .Simple = try self.parseSimpleCommand() },
+            else => error.ParseError,
+            };
+        }
+
+        fn parseSimpleCommand(self: *@This()) !SimpleCommand {
+             if (self.current.kind != .identifier) {
+                // TODO: better error handling
                 return yash.ShellError.ParseError;
             }
 
@@ -51,12 +61,27 @@ pub fn Parser(comptime L: type) type {
                 try self.advance();
             }
 
-            return Statement{
-                .Command = Ast.CommandExpr{
+            return SimpleCommand{
                     .name = name,
                     .args = try args.toOwnedSlice(),
-                },
-            };
+                };
+        }
+
+        fn peek(self: *@This()) !Token {
+            if  (self.peeked_token) |tok| {
+                return tok;
+            }
+            try self.advance();
+            self.peeked_token = self.current;
+            return self.current;
+        }
+
+        fn advance(self: *@This()) !void {
+            if (self.peeked_token) |tok| {
+                self.peeked_token = null;
+                self.current = tok;
+            }
+            self.current = try self.lexer.nextToken();
         }
     };
 }

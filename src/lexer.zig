@@ -27,11 +27,10 @@ pub const Lexer = struct {
         if (self.isAtEnd()) {
             return Token{ .kind = TokenType.eof, .lexeme = "" };
         }
-        const c = self.peek();
+        const c = self.peekChar();
 
         return switch (c) {
-            ';' => self.lexSemicolon(),
-            // TODO: how to handle the duplication with isValidIndentfier
+            ';' => self.lexToken(TokenType.semicolon),
             '0'...'9', 'a'...'z', 'A'...'Z', '.', '/', '_' => self.lexIdentifier(),
             else => LexerError.invalid,
         };
@@ -40,26 +39,25 @@ pub const Lexer = struct {
     fn lexIdentifier(self: *Lexer) Token {
         // TODO: handle invalid chars
         const start = self.pos;
-        while (!self.isAtEnd() and !std.ascii.isWhitespace(self.peek())) {
+        while (!self.isAtEnd() and !std.ascii.isWhitespace(self.peekChar())) {
             self.pos += 1;
         }
         return Token{ .kind = TokenType.identifier, .lexeme = self.source[start..self.pos] };
     }
 
-    fn lexSemicolon(self: *Lexer) Token {
-        // TODO: handle invalid chars
+    fn lexToken(self: *Lexer, kind: TokenType) Token {
         const start = self.pos;
         self.pos += 1;
-        return Token{ .kind = TokenType.semicolon, .lexeme = self.source[start..self.pos] };
+        return Token{ .kind = kind, .lexeme = self.source[start..self.pos] };
     }
 
     fn skipWhitespace(self: *Lexer) void {
-        while (!self.isAtEnd() and std.ascii.isWhitespace(self.peek())) {
+        while (!self.isAtEnd() and std.ascii.isWhitespace(self.peekChar())) {
             self.pos += 1;
         }
     }
 
-    fn peek(self: *Lexer) u8 {
+    fn peekChar(self: *Lexer) u8 {
         return self.source[self.pos];
     }
 

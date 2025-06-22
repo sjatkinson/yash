@@ -7,7 +7,7 @@ pub const Ast = struct {
     statements: []Statement,
 
     pub const Statement = union(enum) {
-        Command: CommandExpr,
+        Command: Command,
 
         pub fn deinit(self: *Statement, alloc: std.mem.Allocator) void {
             switch (self.*) {
@@ -16,11 +16,21 @@ pub const Ast = struct {
         }
     };
 
-    pub const CommandExpr = struct {
+    pub const Command = union(enum) {
+        Simple: SimpleCommand,
+
+        pub fn deinit(self: *Command, alloc: std.mem.Allocator) void {
+            switch(self.*) {
+                .Simple => |*simple| simple.deinit(alloc),
+            }
+        }
+    };
+
+    pub const SimpleCommand = struct {
         name: []const u8,
         args: []const []const u8,
 
-        pub fn deinit(self: *CommandExpr, alloc: std.mem.Allocator) void {
+        pub fn deinit(self: *SimpleCommand, alloc: std.mem.Allocator) void {
             alloc.free(self.args);
         }
     };

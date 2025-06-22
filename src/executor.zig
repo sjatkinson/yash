@@ -27,17 +27,21 @@ pub const Executor = struct {
         };
     }
 
-    fn executeCommand(self: *Executor, cmd: Ast.CommandExpr) !u8 {
-        if (cmd.name.len == 0)
-            return yash.ShellError.ParseError; // TODO: fix this
+    fn executeCommand(self: *Executor, cmd: Ast.Command) !u8 {
+        switch(cmd) {
+            .Simple => |simple| {
+                if (simple.name.len == 0)
+                    return yash.ShellError.ParseError; // TODO: fix this
 
-        const maybeBuiltin = builtins.findBuiltin(cmd.name);
-        if (maybeBuiltin) |func| {
-            func(self.allocator, cmd.args);
-            return 0;
+                const maybeBuiltin = builtins.findBuiltin(simple.name);
+                if (maybeBuiltin) |func| {
+                    func(self.allocator, simple.args);
+                    return 0;
+                }
+                // TODO: is it an alias, or a built-in
+
+                return try exec.execute(self.allocator, simple.name, simple.args);
+            },
         }
-        // TODO: is it an alias, or a built-in
-
-        return try exec.execute(self.allocator, cmd.name, cmd.args);
     }
 };
