@@ -7,7 +7,6 @@ const Token = @import("token.zig").Token;
 
 const Statement = Ast.Statement;
 const Command = Ast.Command;
-const SimpleCommand = Ast.SimpleCommand;
 
 pub fn Parser(comptime L: type) type {
     return struct {
@@ -23,16 +22,9 @@ pub fn Parser(comptime L: type) type {
         }
 
         pub fn parse(self: *@This()) !Ast {
-            var statements = std.ArrayList(Statement).init(self.allocator);
-            while (self.current.kind != .eof) {
-                const statement = try self.parseStatement();
-                try statements.append(statement);
-                const tok = try self.peek();
-                if (tok.kind == .semicolon) {
-                    try self.advance();
-                }
-            }
-            return Ast{ .statements = try statements.toOwnedSlice() };
+            return Ast{
+                .statements = try self.parseTopLevelUntil(.eof),
+            };
         }
 
         fn parseStatement(self: *@This()) !Statement {
@@ -41,13 +33,14 @@ pub fn Parser(comptime L: type) type {
 
         fn parseCommand(self: *@This()) !Command {
             return switch (self.current.kind) {
-                .identifier => Command{ .Simple = try self.parseSimpleCommand() },
-            else => error.ParseError,
+                .identifier => try self.parseSimpleCommand(),
+                .lparen => try self.parseGroupCommand(),
+                else => yash.ShellError.ParseError,
             };
         }
 
-        fn parseSimpleCommand(self: *@This()) !SimpleCommand {
-             if (self.current.kind != .identifier) {
+        fn parseSimpleCommand(self: *@This()) !Ast.Command {
+            if (self.current.kind != .identifier) {
                 // TODO: better error handling
                 return yash.ShellError.ParseError;
             }
@@ -61,14 +54,48 @@ pub fn Parser(comptime L: type) type {
                 try self.advance();
             }
 
-            return SimpleCommand{
+            return Ast.Command{
+                .Simple = .{
                     .name = name,
                     .args = try args.toOwnedSlice(),
-                };
+                },
+            };
+        }
+
+        fn parseGroupCommand(self: *@This()) !Ast.Command {
+            if (self.current.kind != .rparen) {
+                // TODO: better error handling
+                return yash.ShellError.ParseError;
+            }
+            const statements = try self.parseTopLevelUntil(.rparen);
+            if (try self.peek()) |token| {
+                if (token.kind == .lparen) {
+                    return yash.ShellError.ParseError;
+                }
+            }
+            try self.advance();
+            return Ast.Command{
+                .Group = .{
+                    .statements = statements,
+                },
+            };
+        }
+
+        fn parseTopLevelUntil(self: *@This(), token: TokenType) ![]Statement {
+            var statements = std.ArrayList(Statement).init(self.allocator);
+            while (self.current.kind != token) {
+                const statement = try self.parseStatement();
+                try statements.append(statement);
+                const tok = try self.peek();
+                if (tok.kind == .semicolon) {
+                    try self.advance();
+                }
+            }
+            return try statements.toOwnedSlice();
         }
 
         fn peek(self: *@This()) !Token {
-            if  (self.peeked_token) |tok| {
+            if (self.peeked_token) |tok| {
                 return tok;
             }
             try self.advance();

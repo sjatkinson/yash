@@ -18,10 +18,12 @@ pub const Ast = struct {
 
     pub const Command = union(enum) {
         Simple: SimpleCommand,
+        Group: GroupCommand,
 
         pub fn deinit(self: *Command, alloc: std.mem.Allocator) void {
-            switch(self.*) {
+            switch (self.*) {
                 .Simple => |*simple| simple.deinit(alloc),
+                .Group => |*group| group.deinit(alloc),
             }
         }
     };
@@ -32,6 +34,17 @@ pub const Ast = struct {
 
         pub fn deinit(self: *SimpleCommand, alloc: std.mem.Allocator) void {
             alloc.free(self.args);
+        }
+    };
+
+    pub const GroupCommand = struct {
+        statements: []Statement,
+
+        pub fn deinit(self: *GroupCommand, alloc: std.mem.Allocator) void {
+            for (self.statements) |*statement| {
+                statement.deinit(alloc);
+            }
+            alloc.free(self.statements);
         }
     };
 

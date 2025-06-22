@@ -18,7 +18,7 @@ pub fn run(allocator: std.mem.Allocator) !void {
             continue;
         };
         if (result) |line| {
-            var ast = parseLine(allocator, line ) catch |e| {
+            var ast = parseLine(allocator, line) catch |e| {
                 // TODO: handle specific errors
                 std.debug.print("Error parsing input: {}\n", .{e});
                 continue;
@@ -32,14 +32,13 @@ pub fn run(allocator: std.mem.Allocator) !void {
             };
             // TODO: keep track of last error
             _ = exit_code;
-        }
-        else {
+        } else {
             break;
         }
     }
 }
 
-fn parseLine(allocator: std.mem.Allocator, line: [] const u8) !Ast {
+fn parseLine(allocator: std.mem.Allocator, line: []const u8) !Ast {
     var lexer = Lexer.init(line);
     const MyParser = Parser(@TypeOf(lexer));
     var parser = try MyParser.init(allocator, &lexer);

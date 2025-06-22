@@ -14,7 +14,6 @@ const builtin_cmds = [_]BuiltinCmds{
     .{ .name = "type", .func = &doType },
 };
 
-
 pub fn findBuiltin(cmd: []const u8) ?BuiltinFn {
     for (builtin_cmds) |builtin| {
         if (std.mem.eql(u8, cmd, builtin.name)) {

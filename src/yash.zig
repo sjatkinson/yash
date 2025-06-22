@@ -5,6 +5,7 @@ pub const repl = yash_repl.run;
 
 pub const ShellError = error{
     ParseError,
+    NotImplemented,
 };
 
 /// Print to stdout. Panics on failure.

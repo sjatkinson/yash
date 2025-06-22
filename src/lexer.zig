@@ -31,6 +31,9 @@ pub const Lexer = struct {
 
         return switch (c) {
             ';' => self.lexToken(TokenType.semicolon),
+            '(' => self.lexToken(TokenType.lparen),
+            ')' => self.lexToken(TokenType.rparen),
+            // TODO: how to handle the duplication with isValidIndentfier
             '0'...'9', 'a'...'z', 'A'...'Z', '.', '/', '_' => self.lexIdentifier(),
             else => LexerError.invalid,
         };

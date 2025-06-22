@@ -28,7 +28,7 @@ pub const Executor = struct {
     }
 
     fn executeCommand(self: *Executor, cmd: Ast.Command) !u8 {
-        switch(cmd) {
+        switch (cmd) {
             .Simple => |simple| {
                 if (simple.name.len == 0)
                     return yash.ShellError.ParseError; // TODO: fix this
@@ -41,6 +41,9 @@ pub const Executor = struct {
                 // TODO: is it an alias, or a built-in
 
                 return try exec.execute(self.allocator, simple.name, simple.args);
+            },
+            .Group => |_| {
+                return yash.ShellError.NotImplemented;
             },
         }
     }
